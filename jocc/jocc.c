@@ -1,3 +1,7 @@
+// Copyright (c) Jo Bates 2021.
+// Distributed under the MIT License.
+// See accompanying file LICENSE.txt
+
 #include "../common/preprocessor.h"
 
 // Read file.
