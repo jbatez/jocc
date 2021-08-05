@@ -48,7 +48,7 @@ together. In JoC, I call this a "translation group".
 
 For example, the following translation group would compile just fine in JoC:
 
-a.joc:
+**a.joc:**
 ```c
 void b(void)
 {
@@ -62,7 +62,7 @@ void c(long x)
 }
 ```
 
-d.joc:
+**d.joc:**
 ```c
 void e(void)
 {
@@ -86,13 +86,13 @@ Of course, if you really like headers because they separate interfaces from
 implementations, there's nothing stopping you from doing the same thing in a
 translation group. Example:
 
-foo-interface.joc:
+**foo-interface.joc:**
 ```c
 // This is the interface documentation for foo.
 void foo(void);
 ```
 
-foo-implementation.joc:
+**foo-implementation.joc:**
 ```c
 // This is the implementation documentation for foo.
 void foo(void)
@@ -116,7 +116,7 @@ translation group get preprocessed first, and all `.joc` files in the same
 translation group begin with the macro definitions the `.jop` preprocessors
 ended with. Example:
 
-prelude.jop:
+**prelude.jop:**
 ```c
 #include <stdio.h>
 #include <stdlib.h>
@@ -124,7 +124,7 @@ prelude.jop:
 #define HELLO_WORLD "Hello, world!\n"
 ```
 
-main.joc:
+**main.joc:**
 ```c
 int main(void)
 {
@@ -196,7 +196,7 @@ or pointers provides the following advantages:
   in-particular would be twice as big.
 - 64-bit data manipulation often requires an extra byte per-instruction in
   x86-64. Using 32-bit values saves on code size in-addition to data size.
-- Smaller sizes doesn't just mean lower memory requirements. It also mean more
+- Smaller sizes doesn't just mean lower memory requirements; it also mean more
   data and instructions fit in CPU caches, resulting in speed boosts.
 - Provides greater consistency when compiled on 32-bit targets. WebAssembly
   in-particular is a platform I'd like JoCC to work on.
