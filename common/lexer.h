@@ -137,8 +137,9 @@ static char _lexer_include_peek(struct lexer *lexer)
 }
 
 // Include characters up to and including delimiter.
+// Returns weather or not the delimiter was reached.
 // Used to build character-constant and string-literal tokens.
-static void _lexer_include_until_delimiter(struct lexer *lexer, char delimiter)
+static bool _lexer_include_until_delimiter(struct lexer *lexer, char delimiter)
 {
     for (;;)
     {
@@ -147,7 +148,7 @@ static void _lexer_include_until_delimiter(struct lexer *lexer, char delimiter)
         if (*lexer->pos == delimiter)
         {
             _lexer_include_byte(lexer);
-            break;
+            return true;
         }
         else if (*lexer->pos == '\\')
         {
@@ -159,11 +160,11 @@ static void _lexer_include_until_delimiter(struct lexer *lexer, char delimiter)
 
         // At this stage, we allow anything in character-constants
         // and string-literals other than EOF and EOL.
-        // TODO: Validate UTF-8.
+        // TODO: Decode UTF-8 and validate code point legality.
         char c = *lexer->pos;
         if (c == 0 || c == '\n' || c == '\r')
         {
-            break;
+            return false;
         }
         else
         {
@@ -301,8 +302,9 @@ static struct lexeme lexer_next(struct lexer *lexer)
     enum syncat syncat;
     switch (*lexer->pos)
     {
-    case 0:
+    case '\0':
         // Consume EOF. The caller should stop using this lexer after this.
+        // TODO: Validate actually EOF and not a NUL byte.
         _lexer_consume_byte(lexer);
         syncat = SYNCAT_EOF;
         break;
@@ -360,14 +362,12 @@ static struct lexeme lexer_next(struct lexer *lexer)
             if (d == '\'')
             {
                 _lexer_include_peek(lexer);
-                _lexer_include_until_delimiter(lexer, d);
-                syncat = SYNCAT_CHAR_CONST;
+                goto char_const;
             }
             else if (d == '"')
             {
                 _lexer_include_peek(lexer);
-                _lexer_include_until_delimiter(lexer, d);
-                syncat = SYNCAT_STRING_LIT;
+                goto string_lit;
             }
             else
             {
@@ -379,15 +379,29 @@ static struct lexeme lexer_next(struct lexer *lexer)
     case '\'':
         // Character-constant.
         _lexer_include_byte(lexer);
-        _lexer_include_until_delimiter(lexer, '\'');
-        syncat = SYNCAT_CHAR_CONST;
+    char_const:
+        if (_lexer_include_until_delimiter(lexer, '\''))
+        {
+            syncat = SYNCAT_CHAR_CONST;
+        }
+        else
+        {
+            syncat = SYNCAT_INCOMPLETE_CHAR_CONST;
+        }
         break;
 
     case '"':
         // String-literal.
         _lexer_include_byte(lexer);
-        _lexer_include_until_delimiter(lexer, '"');
-        syncat = SYNCAT_STRING_LIT;
+    string_lit:
+        if (_lexer_include_until_delimiter(lexer, '"'))
+        {
+            syncat = SYNCAT_STRING_LIT;
+        }
+        else
+        {
+            syncat = SYNCAT_INCOMPLETE_STRING_LIT;
+        }
         break;
 
     case 'A': case 'B': case 'C': case 'D': case 'E':
@@ -498,20 +512,22 @@ static struct lexeme lexer_next(struct lexer *lexer)
                 for (;;)
                 {
                     // Terminate early on EOF.
-                    // TODO: Generate diagnostic.
+                    // TODO: Combine with cases below.
                     if (*lexer->pos == 0)
                     {
+                        syncat = SYNCAT_INCOMPLETE_BLOCK_COMMENT;
                         break;
                     }
 
                     // Terminate on */
                     // Handle EOL specially.
                     // Just consume everything else.
-                    // TODO: Validate UTF-8.
+                    // TODO: Decode UTF-8 and validate code point legality.
                     char c = _lexer_consume_byte(lexer);
                     if (c == '*' && _lexer_peek(lexer) == '/')
                     {
                         _lexer_consume_peek(lexer);
+                        syncat = SYNCAT_BLOCK_COMMENT;
                         break;
                     }
                     else if (c == '\r' || c == '\n')
@@ -524,7 +540,6 @@ static struct lexeme lexer_next(struct lexer *lexer)
                         lexer_begin_line(lexer);
                     }
                 }
-                syncat = SYNCAT_BLOCK_COMMENT;
             }
             else if (*peek == '/')
             {
@@ -533,7 +548,7 @@ static struct lexeme lexer_next(struct lexer *lexer)
                 _lexer_consume_peek(lexer);
 
                 // Consume everything else up to but excluding EOF and EOL.
-                // TODO: Validate UTF-8.
+                // TODO: Decode UTF-8 and validate code point legality.
                 for (;;)
                 {
                     _lexer_consume_line_splices(lexer);
