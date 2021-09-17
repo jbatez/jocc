@@ -32,6 +32,14 @@ static void tmp_stack_destroy(struct tmp_stack *stack)
     jocc_free(stack->data);
 }
 
+// Get pointer to end of temporary stack.
+static unsigned char *tmp_stack_end(struct tmp_stack *stack)
+{
+    assert(stack != NULL);
+
+    return stack->data + stack->size;
+}
+
 // Push to temporary stack.
 static void tmp_stack_push(
     struct tmp_stack *stack,
@@ -63,4 +71,13 @@ static void tmp_stack_push(
 
     // Copy the new data to the top of the stack.
     memcpy(stack->data + old_size, data, size);
+}
+
+// Pop bytes off top of temporary stack.
+static void tmp_stack_pop(struct tmp_stack *stack, size_t size)
+{
+    assert(stack != NULL);
+    assert(stack->size >= size);
+
+    stack->size -= size;
 }

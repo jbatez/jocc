@@ -45,8 +45,7 @@ int main(void)
 
     // Read file and generate corresponding phys_file and logi_file.
     const char *path = "example.joc";
-    strid_t name = strman_getid(&tgroup.strman, path, strlen(path));
-    strman_get(&tgroup.strman, name);
+    strid_t name = strman_get_id(&tgroup.strman, path, strlen(path));
     char *text = read_file(path);
 
     phys_file_id_t phys_file_id =
@@ -70,7 +69,9 @@ int main(void)
         0, NULL);
 
     srcloc_t line_start;
-    srcman_get(&tgroup.srcman, 1, &line_start);
+    srcman_get_line(&tgroup.srcman, 1, &line_start);
+
+    strman_get_str(&tgroup.strman, name);
 
     // Cleanup.
     jocc_free(text);

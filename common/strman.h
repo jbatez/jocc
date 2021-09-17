@@ -58,7 +58,7 @@ static void strman_destroy(struct strman *strman)
 }
 
 // Get ID for string.
-static strid_t strman_getid(
+static strid_t strman_get_id(
     struct strman *strman,
     const char *string,
     uint32_t len)
@@ -185,7 +185,7 @@ static strid_t strman_getid(
 }
 
 // Get string by ID.
-static const char *strman_get(struct strman *strman, strid_t strid)
+static const char *strman_get_str(struct strman *strman, strid_t strid)
 {
     assert(strman != NULL);
     assert(strid < strman->data_size);

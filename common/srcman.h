@@ -283,8 +283,8 @@ static struct logi_file *srcman_get_logi_file(
 //     return &srcman->pres_files[id];
 // }
 
-// Get source location information.
-static struct srcline *srcman_get(
+// Get source location line information.
+static struct srcline *srcman_get_line(
     struct srcman *srcman,
     srcloc_t srcloc,
     srcloc_t *line_start_out)

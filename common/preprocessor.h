@@ -47,7 +47,7 @@ static void preprocess(struct tgroup *tgroup, logi_file_id_t logi_file_id)
             }
             else
             {
-                astid_t astid = astman_alloc(
+                astid_t astid = astman_alloc_node(
                     &tgroup->astman, lexeme.syncat, 0,
                     lexeme.spelling == 0 ? 2 : 3);
 
@@ -63,12 +63,12 @@ static void preprocess(struct tgroup *tgroup, logi_file_id_t logi_file_id)
             }
         }
 
-        // Complete lexemes.
-        uint16_t child_count = astlst_complete(tgroup, &lexemes);
+        // Finalize lexemes.
+        uint16_t child_count = astlst_finalize(tgroup, &lexemes);
         size_t children_size = sizeof(astid_t) * child_count;
 
         // TODO.
-        tgroup->tmp_stack.size -= children_size;
+        tmp_stack_pop(&tgroup->tmp_stack, children_size);
 
         // Stop after EOF.
         if (eof)

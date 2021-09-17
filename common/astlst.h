@@ -23,7 +23,7 @@ static void astlst_init(struct astlst *astlst)
 }
 
 // Convert all direct ID's to a sublist.
-static void astlst_to_sublist(
+static void _astlst_to_sublist(
     struct tgroup *tgroup,
     uint16_t child_count)
 {
@@ -31,10 +31,10 @@ static void astlst_to_sublist(
     struct tmp_stack *tmp_stack = &tgroup->tmp_stack;
 
     size_t children_size = sizeof(astid_t) * child_count;
-    void *children = tmp_stack->data + tmp_stack->size - children_size;
-    astid_t sublist = astman_alloc(astman, SYNCAT_SUBLIST, child_count, 0);
+    void *children = tmp_stack_end(tmp_stack) - children_size;
+    astid_t sublist = astman_alloc_node(astman, SYNCAT_SUBLIST, child_count, 0);
     memcpy(astman->data + sublist, children, children_size);
-    tmp_stack->size -= children_size;
+    tmp_stack_pop(tmp_stack, children_size);
 
     tmp_stack_push(tmp_stack, &sublist, sizeof(sublist));
 }
@@ -56,7 +56,7 @@ static void astlst_push(
         // uint16_t overflow before pushing the new ID.
         astlst->direct_count = 1;
         astlst->sublist_count++;
-        astlst_to_sublist(tgroup, UINT16_MAX);
+        _astlst_to_sublist(tgroup, UINT16_MAX);
     }
 
     // Push the new ID.
@@ -65,7 +65,7 @@ static void astlst_push(
 
 // Make sure total child count fits in uint16_t. Doesn't bother
 // to leave astlst in a meaningful state; stop using it after this.
-static uint16_t astlst_complete(struct tgroup *tgroup, struct astlst *astlst)
+static uint16_t astlst_finalize(struct tgroup *tgroup, struct astlst *astlst)
 {
     assert(tgroup != NULL);
     assert(astlst != NULL);
@@ -77,7 +77,7 @@ static uint16_t astlst_complete(struct tgroup *tgroup, struct astlst *astlst)
     }
     else
     {
-        astlst_to_sublist(tgroup, astlst->direct_count);
+        _astlst_to_sublist(tgroup, astlst->direct_count);
         return astlst->sublist_count + 1;
     }
 }

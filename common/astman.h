@@ -42,7 +42,7 @@ static void astman_destroy(struct astman *astman)
 }
 
 // Allocate abstract syntax tree node.
-static astid_t astman_alloc(
+static astid_t astman_alloc_node(
     struct astman *astman,
     enum syncat syncat,
     uint16_t child_count,
