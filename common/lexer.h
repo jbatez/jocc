@@ -505,7 +505,7 @@ static struct lexeme lexer_next(struct lexer *lexer)
                     }
 
                     // Terminate on */
-                    // Handle EOL especially.
+                    // Handle EOL specially.
                     // Just consume everything else.
                     char c = lexer_consume_char(lexer);
                     if (c == '*' && lexer_peek(lexer) == '/')

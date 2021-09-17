@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "astlst.h"
 #include "lexer.h"
 
 // Preprocessor (work-in-progress).
@@ -25,8 +26,9 @@ static void preprocess(struct tgroup *tgroup, logi_file_id_t logi_file_id)
     {
         lexer_begin_line(&lexer);
 
-        // Convert lexemes to AST nodes and push ID's to tmp_stack.
-        size_t lexeme_astids_start = tgroup->tmp_stack.size;
+        // Convert lexemes to AST nodes.
+        struct astlst lexemes;
+        astlst_init(&lexemes);
         bool eof = false;
         for (;;)
         {
@@ -57,14 +59,18 @@ static void preprocess(struct tgroup *tgroup, logi_file_id_t logi_file_id)
                     tgroup->astman.data[astid + 2] = lexeme.spelling;
                 }
 
-                tmp_stack_push(&tgroup->tmp_stack, &astid, sizeof(astid));
+                astlst_push(tgroup, &lexemes, astid);
             }
         }
 
-        // TODO.
+        // Complete lexemes.
+        uint16_t child_count = astlst_complete(tgroup, &lexemes);
+        size_t children_size = sizeof(astid_t) * child_count;
 
-        // Restore tmp_stack and continue to next line.
-        tgroup->tmp_stack.size = lexeme_astids_start;
+        // TODO.
+        tgroup->tmp_stack.size -= children_size;
+
+        // Stop after EOF.
         if (eof)
         {
             break;

@@ -52,15 +52,15 @@ static astid_t astman_alloc(
 
     // Make sure header + child_count doesn't cause overflow.
     uint32_t old_len = astman->data_len;
-    uint32_t mid_len = old_len + 1 + child_count;
-    if (mid_len <= old_len)
+    uint32_t tmp_len = old_len + 1 + child_count;
+    if (tmp_len <= old_len)
     {
         exit_impl_limit_exceeded();
     }
 
     // Make sure extra_count doesn't cause overflow.
-    astman->data_len = mid_len + extra_count;
-    if (astman->data_len < mid_len)
+    astman->data_len = tmp_len + extra_count;
+    if (astman->data_len < tmp_len)
     {
         exit_impl_limit_exceeded();
     }

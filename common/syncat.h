@@ -75,4 +75,6 @@ enum syncat
 
     SYNCAT_LINE_SPLICE,
     SYNCAT_OTHER_CHAR,
+
+    SYNCAT_SUBLIST, // Sub-list of a node with over UINT16_MAX children.
 };
