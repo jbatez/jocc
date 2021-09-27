@@ -38,9 +38,9 @@ struct srcloc_range
     srcloc_t end;
 };
 
-// Exit because some implementation limit was exceeded.
+// Exit because an implementation limit was exceeded.
 static void exit_impl_limit_exceeded(void)
 {
-    fprintf(stderr, "fatal error: some implementation limit was exceeded\n");
+    fprintf(stderr, "fatal error: an implementation limit was exceeded\n");
     exit(EXIT_FAILURE);
 }

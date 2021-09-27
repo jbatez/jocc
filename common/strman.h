@@ -129,7 +129,7 @@ static strid_t strman_get_id(
             }
 
             // Copy non-empty old_entries into empty slots in the new array.
-            for (uint32_t j = (old_entry->hash & mask);; j = (j + 1) & mask)
+            for (uint32_t j = old_entry->hash & mask;; j = (j + 1) & mask)
             {
                 struct strman_entry *new_entry = &strman->entries[j];
                 if (new_entry->strid == 0)
@@ -155,8 +155,8 @@ static strid_t strman_get_id(
 
     // Initialize new entry.
     strid_t strid = strman->data_size;
-    entry->hash = hash;
     entry->strid = strid;
+    entry->hash = hash;
 
     // Append new data.
     strman->data_size = strid + len + 1;

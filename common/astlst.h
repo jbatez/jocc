@@ -23,7 +23,7 @@ static void astlst_init(struct astlst *astlst)
 }
 
 // Convert all direct ID's to a sublist.
-static void _astlst_to_sublist(
+static void _astlst_direct_to_sublist(
     struct tgroup *tgroup,
     uint16_t child_count)
 {
@@ -56,14 +56,14 @@ static void astlst_push(
         // uint16_t overflow before pushing the new ID.
         astlst->direct_count = 1;
         astlst->sublist_count++;
-        _astlst_to_sublist(tgroup, UINT16_MAX);
+        _astlst_direct_to_sublist(tgroup, UINT16_MAX);
     }
 
     // Push the new ID.
     tmp_stack_push(&tgroup->tmp_stack, &astid, sizeof(astid));
 }
 
-// Make sure total child count fits in uint16_t. Doesn't bother
+// Makes sure the total child count fits in uint16_t. Doesn't bother
 // to leave astlst in a meaningful state; stop using it after this.
 static uint16_t astlst_finalize(struct tgroup *tgroup, struct astlst *astlst)
 {
@@ -77,7 +77,7 @@ static uint16_t astlst_finalize(struct tgroup *tgroup, struct astlst *astlst)
     }
     else
     {
-        _astlst_to_sublist(tgroup, astlst->direct_count);
+        _astlst_direct_to_sublist(tgroup, astlst->direct_count);
         return astlst->sublist_count + 1;
     }
 }

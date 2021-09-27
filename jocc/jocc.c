@@ -53,8 +53,6 @@ int main(void)
     logi_file_id_t logi_file_id =
         srcman_add_logi_file(&tgroup.srcman, phys_file_id, 0);
 
-    // TODO: Validate bytes in text.
-
     // Preprocess.
     preprocess(&tgroup, logi_file_id);
 
@@ -67,6 +65,8 @@ int main(void)
         &tgroup.diag_arr, 1, 1,
         DIAG_SEVERITY_ERROR, DIAG_CODE_TODO,
         0, NULL);
+
+    srcman_get_pres_file(&tgroup.srcman, 0);
 
     srcloc_t line_start;
     srcman_get_line(&tgroup.srcman, 1, &line_start);

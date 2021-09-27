@@ -273,15 +273,15 @@ static struct logi_file *srcman_get_logi_file(
 }
 
 // // Get presumed file.
-// static struct pres_file *srcman_get_pres_file(
-//     struct srcman *srcman,
-//     pres_file_id_t id)
-// {
-//     assert(srcman != NULL);
-//     assert(id < srcman->pres_file_count);
-//
-//     return &srcman->pres_files[id];
-// }
+static struct pres_file *srcman_get_pres_file(
+    struct srcman *srcman,
+    pres_file_id_t id)
+{
+    assert(srcman != NULL);
+    assert(id < srcman->pres_file_count);
+
+    return &srcman->pres_files[id];
+}
 
 // Get source location line information.
 static struct srcline *srcman_get_line(
