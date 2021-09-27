@@ -28,6 +28,7 @@ struct lexer
 {
     struct tgroup *tgroup;
     const char *pos;
+    const char *end;
     pres_file_id_t pres_file_id;
     uint32_t line_num_offset;
 };
@@ -36,15 +37,18 @@ struct lexer
 static void lexer_init(
     struct lexer *lexer,
     struct tgroup *tgroup,
-    const char *text,
+    const char *pos,
+    const char *end,
     pres_file_id_t pres_file_id)
 {
     assert(lexer != NULL);
     assert(tgroup != NULL);
-    assert(text != NULL);
+    assert(pos != NULL);
+    assert(end != NULL);
 
     lexer->tgroup = tgroup;
-    lexer->pos = text;
+    lexer->pos = pos;
+    lexer->end = end;
     lexer->pres_file_id = pres_file_id;
     lexer->line_num_offset = 0;
 }
@@ -328,8 +332,10 @@ static struct lexeme lexer_next(struct lexer *lexer)
     switch (*lexer->pos)
     {
     case '\0':
+        if (lexer->pos != lexer->end) {
+            goto other;
+        }
         // Consume EOF. The caller should stop using this lexer after this.
-        // TODO: Validate actually EOF and not a NUL byte.
         _lexer_consume_byte(lexer);
         syncat = SYNCAT_EOF;
         break;
@@ -793,6 +799,7 @@ static struct lexeme lexer_next(struct lexer *lexer)
 
     default:
         // Just pass through all other non-control characters.
+    other:
         {
             struct decode_utf8_result u = _lexer_decode_no_ctrl(lexer->pos);
             if (u.code_point >= 0)

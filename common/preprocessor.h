@@ -19,7 +19,8 @@ static void preprocess(struct tgroup *tgroup, logi_file_id_t logi_file_id)
         &tgroup->srcman, logi_file_id, 1, phys_file->name, 1);
 
     struct lexer lexer;
-    lexer_init(&lexer, tgroup, phys_file->text, pres_file_id);
+    const char *end = phys_file->data + phys_file->size;
+    lexer_init(&lexer, tgroup, phys_file->data, end, pres_file_id);
 
     // For each line.
     for (;;)

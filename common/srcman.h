@@ -23,7 +23,8 @@ typedef uint32_t pres_file_id_t;
 struct phys_file
 {
     strid_t name;
-    const char *text;
+    size_t size; // Excluding NUL-terminator.
+    const char *data; // NUL-terminated.
     bool pragma_once;
     strid_t skip_ifdef;
 };
@@ -115,7 +116,8 @@ static void srcman_destroy(struct srcman *srcman)
 static phys_file_id_t srcman_add_phys_file(
     struct srcman *srcman,
     strid_t name,
-    const char *text)
+    size_t size,
+    const char *data)
 {
     assert(srcman != NULL);
 
@@ -137,7 +139,8 @@ static phys_file_id_t srcman_add_phys_file(
     struct phys_file *file = &srcman->phys_files[id];
 
     file->name = name;
-    file->text = text;
+    file->size = size;
+    file->data = data;
     file->pragma_once = false;
     file->skip_ifdef = 0;
 

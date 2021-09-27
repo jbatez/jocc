@@ -5,7 +5,7 @@
 #include "../common/preprocessor.h"
 
 // Read file.
-static char *read_file(const char *path)
+static char *read_file(const char *path, size_t *size_out)
 {
     FILE *file = fopen(path, "rb");
     if (file == NULL)
@@ -29,6 +29,7 @@ static char *read_file(const char *path)
         }
         else
         {
+            *size_out = size;
             data[size] = 0;
             fclose(file);
             return data;
@@ -46,10 +47,12 @@ int main(void)
     // Read file and generate corresponding phys_file and logi_file.
     const char *path = "example.joc";
     strid_t name = strman_get_id(&tgroup.strman, path, strlen(path));
-    char *text = read_file(path);
+
+    size_t size;
+    char *data = read_file(path, &size);
 
     phys_file_id_t phys_file_id =
-        srcman_add_phys_file(&tgroup.srcman, name, text);
+        srcman_add_phys_file(&tgroup.srcman, name, size, data);
     logi_file_id_t logi_file_id =
         srcman_add_logi_file(&tgroup.srcman, phys_file_id, 0);
 
@@ -74,6 +77,6 @@ int main(void)
     strman_get_str(&tgroup.strman, name);
 
     // Cleanup.
-    jocc_free(text);
+    jocc_free(data);
     tgroup_destroy(&tgroup);
 }
