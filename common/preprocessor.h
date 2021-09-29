@@ -7,13 +7,19 @@
 #include "astlst.h"
 #include "lexer.h"
 
-// Preprocessor (work-in-progress).
-static void preprocess(struct tgroup *tgroup, logi_file_id_t logi_file_id)
+// Preprocessor (TODO: work-in-progress).
+static int preprocess(
+    struct tgroup *tgroup,
+    phys_file_id_t phys_file_id,
+    astid_t included_at)
 {
-    struct logi_file *logi_file =
-        srcman_get_logi_file(&tgroup->srcman, logi_file_id);
+    int ret = 0;
+
     struct phys_file *phys_file =
-        srcman_get_phys_file(&tgroup->srcman, logi_file->phys_file_id);
+        srcman_get_phys_file(&tgroup->srcman, phys_file_id);
+
+    logi_file_id_t logi_file_id = srcman_add_logi_file(
+        &tgroup->srcman, phys_file_id, included_at, tgroup->srcloc);
 
     pres_file_id_t pres_file_id = srcman_add_pres_file(
         &tgroup->srcman, logi_file_id, 1, phys_file->name, 1);
@@ -46,6 +52,12 @@ static void preprocess(struct tgroup *tgroup, logi_file_id_t logi_file_id)
             {
                 break;
             }
+            else if (lexeme.syncat == SYNCAT_ILLEGAL_BYTES)
+            {
+                eof = true;
+                ret = 1;
+                break;
+            }
             else
             {
                 astid_t astid = astman_alloc_node(
@@ -74,7 +86,7 @@ static void preprocess(struct tgroup *tgroup, logi_file_id_t logi_file_id)
         // Stop after EOF.
         if (eof)
         {
-            break;
+            return ret;
         }
     }
 }

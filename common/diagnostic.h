@@ -16,7 +16,7 @@ enum diag_severity
 // Diagnostic code.
 enum diag_code
 {
-    DIAG_CODE_TODO,
+    DIAG_CODE_ILLEGAL_BYTES,
 };
 
 // Diagnostic (e.g. error or warning).

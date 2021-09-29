@@ -85,3 +85,29 @@ static struct decode_utf8_result decode_utf8(const char *bytes)
 
     return (struct decode_utf8_result){(int32_t)code_point, size};
 }
+
+// Reverse decode UTF-8 code point.
+static struct decode_utf8_result reverse_decode_utf8(
+    const char *begin,
+    const char *end)
+{
+    assert(begin != NULL);
+    assert(end != NULL);
+    assert(end > begin);
+
+    ptrdiff_t offset = -1;
+    while (end + offset > begin && (end[offset] & 0xC0) == 0x80)
+    {
+        offset -= 1;
+    }
+
+    struct decode_utf8_result u = decode_utf8(end + offset);
+    if (u.size == -offset)
+    {
+        return u;
+    }
+    else
+    {
+        return (struct decode_utf8_result){.code_point = -1, .size = 1};
+    }
+}

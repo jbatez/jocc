@@ -35,6 +35,7 @@ struct logi_file
 {
     phys_file_id_t phys_file_id;
     astid_t included_at;
+    srcloc_t start;
 };
 
 // Presumed file.
@@ -152,7 +153,8 @@ static phys_file_id_t srcman_add_phys_file(
 static logi_file_id_t srcman_add_logi_file(
     struct srcman *srcman,
     phys_file_id_t phys_file_id,
-    astid_t included_at)
+    astid_t included_at,
+    srcloc_t start)
 {
     assert(srcman != NULL);
 
@@ -175,6 +177,7 @@ static logi_file_id_t srcman_add_logi_file(
 
     file->phys_file_id = phys_file_id;
     file->included_at = included_at;
+    file->start = start;
 
     // Return ID.
     return id;

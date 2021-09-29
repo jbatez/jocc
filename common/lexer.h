@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "decode_utf8.h"
 #include "tgroup.h"
 
 // One unit of lexer output.
@@ -809,8 +808,15 @@ static struct lexeme lexer_next(struct lexer *lexer)
             }
             else
             {
-                // TODO.
-                abort();
+                syncat = SYNCAT_ILLEGAL_BYTES;
+
+                struct tgroup *tgroup = lexer->tgroup;
+                srcloc_t start = tgroup->srcloc;
+                srcloc_t end = start + u.size;
+                tgroup_add_diag(
+                    tgroup, start, end,
+                    DIAG_SEVERITY_ERROR,
+                    DIAG_CODE_ILLEGAL_BYTES);
             }
         }
         break;

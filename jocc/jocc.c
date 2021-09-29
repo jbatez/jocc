@@ -53,27 +53,14 @@ int main(void)
 
     phys_file_id_t phys_file_id =
         srcman_add_phys_file(&tgroup.srcman, name, size, data);
-    logi_file_id_t logi_file_id =
-        srcman_add_logi_file(&tgroup.srcman, phys_file_id, 0);
 
     // Preprocess.
-    preprocess(&tgroup, logi_file_id);
+    preprocess(&tgroup, phys_file_id, 0);
 
     // Put some unused functions through their
     // paces to elide -Wunused-function for now.
     astman_get_syncat(&tgroup.astman, 1);
     astman_get_child_count(&tgroup.astman, 1);
-
-    diag_arr_add(
-        &tgroup.diag_arr, 1, 1,
-        DIAG_SEVERITY_ERROR, DIAG_CODE_TODO,
-        0, NULL);
-
-    srcman_get_pres_file(&tgroup.srcman, 0);
-
-    srcloc_t line_start;
-    srcman_get_line(&tgroup.srcman, 1, &line_start);
-
     strman_get_str(&tgroup.strman, name);
 
     // Cleanup.
