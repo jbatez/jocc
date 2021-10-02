@@ -83,13 +83,16 @@ static size_t _escaped_size(struct decode_utf8_result u)
 // Escape character/byte(s). Advance src and dst accordingly.
 static void _escape(const char **src, char **dst)
 {
-    struct decode_utf8_result u = decode_utf8(*src);
-    if (u.code_point >= ' ' && u.code_point <= '~')
+    if (**src >= ' ' && **src <= '~')
     {
-        **dst = (char)u.code_point;
+        **dst = **src;
         *dst += 1;
+        *src += 1;
+        return;
     }
-    else if (u.code_point < 0)
+
+    struct decode_utf8_result u = decode_utf8(*src);
+    if (u.code_point < 0)
     {
         for (int i = 0; i < u.size; i++)
         {
@@ -99,7 +102,7 @@ static void _escape(const char **src, char **dst)
     }
     else if (u.code_point <= 0xFFFF)
     {
-        sprintf(*dst, "\\u%04"PRIX32, (uint32_t)u.code_point);
+        sprintf(*dst, "\\u%04"PRIX16, (uint16_t)u.code_point);
         *dst += 6;
     }
     else
@@ -168,13 +171,10 @@ static void tgroup_add_diag(
     // Count the number of characters from start to EOF or EOL.
     size_t right_size = 0;
     const char *right_ptr = start_ptr;
-    while (right_size < 80 && right_ptr < eof_ptr)
+    while (
+        right_size < 80 && right_ptr < eof_ptr &&
+        *right_ptr != '\n' && *right_ptr != '\r')
     {
-        if (*right_ptr == '\n' || *right_ptr == '\r')
-        {
-            break;
-        }
-
         struct decode_utf8_result u = decode_utf8(right_ptr);
         assert(eof_ptr - right_ptr >= u.size);
         right_size += _escaped_size(u);
@@ -190,17 +190,21 @@ static void tgroup_add_diag(
     const char *left_ptr = line_start_ptr;
     for (;;)
     {
-        // Trim leading spaces.
-        while (left_ptr < start_ptr && *left_ptr == ' ')
+        // Trim leading spaces and tabs.
+        while (
+            left_ptr < start_ptr &&
+            (*left_ptr == ' ' || *left_ptr == '\t'))
         {
-            left_size -= 1;
+            left_size -= (*left_ptr == '\t') ? 6 : 1;
             left_ptr += 1;
         }
 
-        // Trim trailing spaces.
-        while (right_ptr > start_ptr && right_ptr[-1] == ' ')
+        // Trim trailing spaces and tabs.
+        while (
+            right_ptr > start_ptr &&
+            (right_ptr[-1] == ' ' || right_ptr[-1] == '\t'))
         {
-            right_size -= 1;
+            right_size -= (right_ptr[-1] == '\t') ? 6 : 1;
             right_ptr -= 1;
         }
 
