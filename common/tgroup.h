@@ -59,7 +59,7 @@ static void tgroup_destroy(struct tgroup *tgroup)
     astman_destroy(&tgroup->astman);
 }
 
-// Determine size of escaped decode_utf8_result.
+// Determine size of a decode_utf8_result after escaping.
 static size_t _escaped_size(struct decode_utf8_result u)
 {
     if (u.code_point >= ' ' && u.code_point <= '~')
@@ -72,7 +72,7 @@ static size_t _escaped_size(struct decode_utf8_result u)
     }
     else if (u.code_point < 0)
     {
-        return u.size * 4; // \xXX for each byte.
+        return 4 * u.size; // \xXX for each byte.
     }
     else if (u.code_point <= 0xFFFF)
     {
@@ -84,46 +84,34 @@ static size_t _escaped_size(struct decode_utf8_result u)
     }
 }
 
-// Escape character/byte(s). Advance src and dst accordingly.
-static void _escape(const char **src, char **dst)
+// Escape a character or byte(s).
+static void _escape(char *dst, const char *src, struct decode_utf8_result u)
 {
-    if (**src >= ' ' && **src <= '~')
+    if (u.code_point >= ' ' && u.code_point <= '~')
     {
-        **dst = **src;
-        *dst += 1;
-        *src += 1;
-        return;
+        *dst = (char)u.code_point;
     }
-    else if (**src == '\t')
+    else if (u.code_point == '\t')
     {
-        (*dst)[0] = '\\';
-        (*dst)[1] = 't';
-        *dst += 2;
-        *src += 1;
-        return;
+        dst[0] = '\\';
+        dst[1] = 't';
     }
-
-    struct decode_utf8_result u = decode_utf8(*src);
-    if (u.code_point < 0)
+    else if (u.code_point < 0)
     {
         for (int i = 0; i < u.size; i++)
         {
-            sprintf(*dst, "\\x%02"PRIX8, (uint8_t)(*src)[i]);
-            *dst += 4;
+            sprintf(dst, "\\x%02"PRIX8, (uint8_t)src[i]);
+            dst += 4;
         }
     }
     else if (u.code_point <= 0xFFFF)
     {
-        sprintf(*dst, "\\u%04"PRIX16, (uint16_t)u.code_point);
-        *dst += 6;
+        sprintf(dst, "\\u%04"PRIX16, (uint16_t)u.code_point);
     }
     else
     {
-        sprintf(*dst, "\\U%08"PRIX32, (uint32_t)u.code_point);
-        *dst += 10;
+        sprintf(dst, "\\U%08"PRIX32, (uint32_t)u.code_point);
     }
-
-    *src += u.size;
 }
 
 // Add diagnostic with implicit line text.
@@ -170,109 +158,83 @@ static void tgroup_add_diag(
     const char *eof_ptr =
         phys_file->data + phys_file->size;
 
-    // Count the number of characters from line_start to start.
-    size_t left_size = 0;
-    for (const char *ptr = line_start_ptr; ptr < start_ptr;)
+    // Count the number of characters from line_start to start with escaping.
+    size_t len = 0;
+    for (const char *src = line_start_ptr; src < start_ptr;)
     {
-        struct decode_utf8_result u = decode_utf8(ptr);
-        assert(start_ptr - ptr >= u.size);
-        left_size += _escaped_size(u);
-        ptr += u.size;
+        struct decode_utf8_result u = decode_utf8(src);
+        size_t escaped_size = _escaped_size(u);
+        assert(u.size <= start_ptr - src);
+        len += escaped_size;
+        src += u.size;
     }
 
-    // Count the number of characters from start to EOF or EOL.
-    size_t right_size = 0;
-    const char *right_ptr = start_ptr;
-    while (
-        right_size < 80 && right_ptr < eof_ptr &&
-        *right_ptr != '\n' && *right_ptr != '\r')
+    // Trim leading characters until there's less than 40.
+    const char *src = line_start_ptr;
+    while (len >= 40)
     {
-        struct decode_utf8_result u = decode_utf8(right_ptr);
-        assert(eof_ptr - right_ptr >= u.size);
-        right_size += _escaped_size(u);
-        right_ptr += u.size;
-
-        if (u.code_point < 0)
-        {
-            break; // No more than one invalid byte sequence on the right.
-        }
+        struct decode_utf8_result u = decode_utf8(src);
+        size_t escaped_size = _escaped_size(u);
+        assert(u.size <= start_ptr - src);
+        len -= escaped_size;
+        src += u.size;
     }
 
-    // Trim both sides until we're at <= 80 characters.
-    const char *left_ptr = line_start_ptr;
-    for (;;)
+    // Trim leading spaces and tabs.
+    while (src < start_ptr && (*src == ' ' || *src == '\t'))
     {
-        // Trim leading spaces and tabs.
-        while (
-            left_ptr < start_ptr &&
-            (*left_ptr == ' ' || *left_ptr == '\t'))
-        {
-            left_size -= (*left_ptr == '\t') ? 6 : 1;
-            left_ptr += 1;
-        }
+        len -= (*src == '\t') ? 2 : 1;
+        src += 1;
+    }
 
-        // Trim trailing spaces and tabs.
-        while (
-            right_ptr > start_ptr &&
-            (right_ptr[-1] == ' ' || right_ptr[-1] == '\t'))
-        {
-            right_size -= (right_ptr[-1] == '\t') ? 6 : 1;
-            right_ptr -= 1;
-        }
+    // Start building line_text.
+    char line_text[81];
+    assert(len < sizeof(line_text));
 
-        // Make sure there's room for at least
-        // one character for start to point at.
-        if (right_size == 0)
-        {
-            if (right_ptr == eof_ptr)
-            {
-                right_size = 5; // <EOF>
-            }
-            else
-            {
-                right_size = 1; // An empty space.
-            }
-        }
+    char *dst = line_text;
+    while (src < start_ptr)
+    {
+        struct decode_utf8_result u = decode_utf8(src);
+        size_t escaped_size = _escaped_size(u);
+        assert(u.size <= start_ptr - src);
+        _escape(dst, src, u);
+        dst += escaped_size;
+        src += u.size;
+    }
 
-        // If we're over 80 characters:
-        if (left_size + right_size > 80)
+    assert(src == start_ptr);
+
+    // Append additional characters until EOF or EOL.
+    uint32_t line_text_offset = (uint32_t)len;
+    while (src < eof_ptr && *src != '\n' && *src != '\r')
+    {
+        struct decode_utf8_result u = decode_utf8(src);
+        size_t escaped_size = _escaped_size(u);
+        assert(u.size <= eof_ptr - src);
+
+        if (len + escaped_size >= sizeof(line_text))
         {
-            if (left_size >= right_size)
-            {
-                // Trim from the left side.
-                struct decode_utf8_result u = decode_utf8(left_ptr);
-                assert(start_ptr - left_ptr >= u.size);
-                left_size -= _escaped_size(u);
-                left_ptr += u.size;
-            }
-            else
-            {
-                // Trim from the right side.
-                struct decode_utf8_result u =
-                    reverse_decode_utf8(start_ptr, right_ptr);
-                assert(right_ptr - start_ptr >= u.size);
-                right_size -= _escaped_size(u);
-                right_ptr -= u.size;
-            }
-        }
-        else
-        {
-            // Done once we're <= 80 characters.
             break;
         }
+
+        _escape(dst, src, u);
+        len += escaped_size;
+        dst += escaped_size;
+        src += u.size;
     }
 
-    // Build line_text.
-    char line_text[81];
-    char *dst = line_text;
-    const char *src = left_ptr;
-    while (src < right_ptr)
+    // Trim trailing spaces and tabs.
+    while (src > start_ptr && (src[-1] == ' ' || src[-1] == '\t'))
     {
-        _escape(&src, &dst);
+        len -= (src[-1] == '\t') ? 2 : 1;
+        dst -= (src[-1] == '\t') ? 2 : 1;
+        src -= 1;
     }
 
-    if (right_ptr == eof_ptr)
+    // Terminate dst.
+    if (start_ptr == eof_ptr)
     {
+        assert(src == eof_ptr);
         strcpy(dst, "<EOF>");
     }
     else
@@ -283,5 +245,5 @@ static void tgroup_add_diag(
     // Append diagnostic.
     diag_arr_add(
         &tgroup->diag_arr, start, end, severity, code,
-        (uint32_t)left_size, line_text);
+        line_text_offset, line_text);
 }
