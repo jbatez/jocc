@@ -66,6 +66,10 @@ static size_t _escaped_size(struct decode_utf8_result u)
     {
         return 1; // Just a normal ASCII character.
     }
+    else if (u.code_point == '\t')
+    {
+        return 2; // \t
+    }
     else if (u.code_point < 0)
     {
         return u.size * 4; // \xXX for each byte.
@@ -87,6 +91,14 @@ static void _escape(const char **src, char **dst)
     {
         **dst = **src;
         *dst += 1;
+        *src += 1;
+        return;
+    }
+    else if (**src == '\t')
+    {
+        (*dst)[0] = '\\';
+        (*dst)[1] = 't';
+        *dst += 2;
         *src += 1;
         return;
     }
