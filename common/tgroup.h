@@ -165,6 +165,7 @@ static void tgroup_add_diag(
         struct decode_utf8_result u = decode_utf8(src);
         size_t escaped_size = _escaped_size(u);
         assert(u.size <= start_ptr - src);
+
         len += escaped_size;
         src += u.size;
     }
@@ -174,9 +175,7 @@ static void tgroup_add_diag(
     while (len >= 40)
     {
         struct decode_utf8_result u = decode_utf8(src);
-        size_t escaped_size = _escaped_size(u);
-        assert(u.size <= start_ptr - src);
-        len -= escaped_size;
+        len -= _escaped_size(u);
         src += u.size;
     }
 
@@ -189,20 +188,15 @@ static void tgroup_add_diag(
 
     // Start building line_text.
     char line_text[81];
-    assert(len < sizeof(line_text));
-
     char *dst = line_text;
     while (src < start_ptr)
     {
         struct decode_utf8_result u = decode_utf8(src);
         size_t escaped_size = _escaped_size(u);
-        assert(u.size <= start_ptr - src);
         _escape(dst, src, u);
         dst += escaped_size;
         src += u.size;
     }
-
-    assert(src == start_ptr);
 
     // Append additional characters until EOF or EOL.
     uint32_t line_text_offset = (uint32_t)len;
@@ -231,11 +225,11 @@ static void tgroup_add_diag(
         src -= 1;
     }
 
-    // Terminate dst.
+    // Terminate line_text.
     if (start_ptr == eof_ptr)
     {
         assert(src == eof_ptr);
-        strcpy(dst, "<EOF>");
+        strcpy(dst, "\\EOF");
     }
     else
     {
