@@ -215,6 +215,12 @@ static void tgroup_add_diag(
         len += escaped_size;
         dst += escaped_size;
         src += u.size;
+
+        // No more than one invalid byte sequence per line_text.
+        if (u.code_point < 0)
+        {
+            break;
+        }
     }
 
     // Trim trailing spaces and tabs.
