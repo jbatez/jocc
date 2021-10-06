@@ -331,7 +331,8 @@ static struct lexeme lexer_next(struct lexer *lexer)
     switch (*lexer->pos)
     {
     case '\0':
-        if (lexer->pos != lexer->end) {
+        if (lexer->pos != lexer->end)
+        {
             goto other;
         }
         // Consume EOF. The caller should stop using this lexer after this.

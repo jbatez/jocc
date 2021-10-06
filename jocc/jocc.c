@@ -5,7 +5,7 @@
 #include "../common/preprocessor.h"
 
 // Read file.
-static char *read_file(const char *path, size_t *size_out)
+static char *read_file(const char *path, uint32_t *size_out)
 {
     FILE *file = fopen(path, "rb");
     if (file == NULL)
@@ -13,15 +13,20 @@ static char *read_file(const char *path, size_t *size_out)
         abort();
     }
 
-    size_t size = 0;
+    uint32_t size = 0;
     char *data = NULL;
     for (;;)
     {
+        if (size > UINT32_MAX - 4096)
+        {
+            abort();
+        }
+
         data = jocc_realloc(data, size + 4096);
         size_t ret = fread(data + size, 1, 4096, file);
         if (ret > 0)
         {
-            size += ret;
+            size += (uint32_t)ret;
         }
         else if (ferror(file))
         {
@@ -44,11 +49,11 @@ int main(void)
     struct tgroup tgroup;
     tgroup_init(&tgroup);
 
-    // Read file and generate corresponding phys_file and logi_file.
+    // Read file and generate corresponding phys_file.
     const char *path = "example.joc";
     strid_t name = strman_get_id(&tgroup.strman, path, strlen(path));
 
-    size_t size;
+    uint32_t size;
     char *data = read_file(path, &size);
 
     phys_file_id_t phys_file_id =

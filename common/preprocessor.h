@@ -15,15 +15,25 @@ static int preprocess(
 {
     int ret = 0;
 
+    // Reserve source locations.
     struct phys_file *phys_file =
         srcman_get_phys_file(&tgroup->srcman, phys_file_id);
 
+    uint32_t old_reserved_srcloc_count = tgroup->reserved_srcloc_count;
+    tgroup->reserved_srcloc_count += phys_file->size + 1;
+    if (tgroup->reserved_srcloc_count <= old_reserved_srcloc_count)
+    {
+        exit_impl_limit_exceeded();
+    }
+
+    // Add logical and presumed file.
     logi_file_id_t logi_file_id = srcman_add_logi_file(
         &tgroup->srcman, phys_file_id, included_at, tgroup->srcloc);
 
     pres_file_id_t pres_file_id = srcman_add_pres_file(
         &tgroup->srcman, logi_file_id, 1, phys_file->name, 1);
 
+    // Initialize lexer.
     struct lexer lexer;
     const char *end = phys_file->data + phys_file->size;
     lexer_init(&lexer, tgroup, phys_file->data, end, pres_file_id);

@@ -18,6 +18,9 @@ struct tgroup
     // Next unused source location.
     srcloc_t srcloc;
 
+    // Number of reserved source locations.
+    srcloc_t reserved_srcloc_count;
+
     // Abstract syntax tree manager.
     struct astman astman;
 
@@ -40,6 +43,7 @@ static void tgroup_init(struct tgroup *tgroup)
     assert(tgroup != NULL);
 
     tgroup->srcloc = 1;
+    tgroup->reserved_srcloc_count = 1;
     astman_init(&tgroup->astman);
     diag_arr_init(&tgroup->diag_arr);
     srcman_init(&tgroup->srcman);
