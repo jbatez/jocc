@@ -51,7 +51,7 @@ int main(void)
 
     // Read file and generate corresponding phys_file.
     const char *path = "example.joc";
-    strid_t name = strman_get_id(&tgroup.strman, path, strlen(path));
+    strid_t name = strman_get_id(&tgroup.strman, path, (uint32_t)strlen(path));
 
     uint32_t size;
     char *data = read_file(path, &size);

@@ -10,7 +10,7 @@
 struct lexeme
 {
     // Syntactic category.
-    enum syncat syncat : 32;
+    enum syncat syncat;
 
     // Token spelling without line splices.
     // 0 for non-tokens (EOF, EOL, white-space, etc).

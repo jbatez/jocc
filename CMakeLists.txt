@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 if(MSVC)
-  set(COMPILE_OPTIONS /W4 /WX)
+  set(COMPILE_OPTIONS /W4 /WX /D_CRT_SECURE_NO_WARNINGS)
 else()
   set(COMPILE_OPTIONS -Wpedantic -Wall -Wextra -Werror -Wfatal-errors)
 endif()
