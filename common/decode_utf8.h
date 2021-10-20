@@ -14,7 +14,7 @@ struct decode_utf8_result
     int size;
 };
 
-// Decode UTF-8 code point.
+// Decode a UTF-8 code point. Assumes bytes is NUL-terminated.
 static struct decode_utf8_result decode_utf8(const char *bytes)
 {
     assert(bytes != NULL);
@@ -65,21 +65,21 @@ static struct decode_utf8_result decode_utf8(const char *bytes)
     {
         if (code_point < 0x80)
         {
-            code_point = -1;
+            code_point = (uint32_t)-1;
         }
     }
     else if (size == 3)
     {
         if (code_point < 0x0800 || (code_point > 0xD7FF && code_point < 0xE000))
         {
-            code_point = -1;
+            code_point = (uint32_t)-1;
         }
     }
     else // (size == 4)
     {
         if (code_point < 0x10000 || code_point > 0x10FFFF)
         {
-            code_point = -1;
+            code_point = (uint32_t)-1;
         }
     }
 

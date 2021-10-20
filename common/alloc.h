@@ -14,7 +14,7 @@ static void *jocc_alloc(size_t size)
     void *ptr = malloc(size);
     if (ptr == NULL)
     {
-        exit_impl_limit_exceeded();
+        out_of_memory();
     }
 
     return ptr;
@@ -38,7 +38,7 @@ static void *jocc_realloc(void *ptr, size_t size)
     ptr = realloc(ptr, size);
     if (ptr == NULL)
     {
-        exit_impl_limit_exceeded();
+        out_of_memory();
     }
 
     return ptr;
@@ -52,7 +52,7 @@ static void *alloc_array(size_t len, size_t element_size)
 
     if (len > SIZE_MAX / element_size)
     {
-        exit_impl_limit_exceeded();
+        out_of_memory();
     }
 
     return jocc_alloc(len * element_size);
@@ -67,7 +67,7 @@ static void *zalloc_array(size_t len, size_t element_size)
     void *ptr = calloc(len, element_size);
     if (ptr == NULL)
     {
-        exit_impl_limit_exceeded();
+        out_of_memory();
     }
 
     return ptr;
@@ -81,7 +81,7 @@ static void *realloc_array(void *ptr, size_t len, size_t element_size)
 
     if (len > SIZE_MAX / element_size)
     {
-        exit_impl_limit_exceeded();
+        out_of_memory();
     }
 
     return jocc_realloc(ptr, len * element_size);

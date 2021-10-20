@@ -40,7 +40,7 @@ static unsigned char *tmp_stack_end(struct tmp_stack *stack)
     return stack->data + stack->size;
 }
 
-// Push to temporary stack.
+// Push bytes to temporary stack.
 static void tmp_stack_push(
     struct tmp_stack *stack,
     const void *data,
@@ -54,7 +54,7 @@ static void tmp_stack_push(
     stack->size = old_size + size;
     if (stack->size < old_size)
     {
-        exit_impl_limit_exceeded();
+        translation_limit_exceeded();
     }
 
     // Re-allocate if necessary.
@@ -73,7 +73,7 @@ static void tmp_stack_push(
     memcpy(stack->data + old_size, data, size);
 }
 
-// Pop bytes off top of temporary stack.
+// Pop bytes off temporary stack.
 static void tmp_stack_pop(struct tmp_stack *stack, size_t size)
 {
     assert(stack != NULL);

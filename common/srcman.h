@@ -127,7 +127,7 @@ static phys_file_id_t srcman_add_phys_file(
     {
         if (srcman->phys_file_capacity > UINT32_MAX / 2)
         {
-            exit_impl_limit_exceeded();
+            translation_limit_exceeded();
         }
 
         srcman->phys_file_capacity *= 2;
@@ -163,7 +163,7 @@ static logi_file_id_t srcman_add_logi_file(
     {
         if (srcman->logi_file_capacity > UINT32_MAX / 2)
         {
-            exit_impl_limit_exceeded();
+            translation_limit_exceeded();
         }
 
         srcman->logi_file_capacity *= 2;
@@ -198,7 +198,7 @@ static pres_file_id_t srcman_add_pres_file(
     {
         if (srcman->pres_file_capacity > UINT32_MAX / 2)
         {
-            exit_impl_limit_exceeded();
+            translation_limit_exceeded();
         }
 
         srcman->pres_file_capacity *= 2;
@@ -235,7 +235,7 @@ static void srcman_add_line(
     {
         if (srcman->line_capacity > UINT32_MAX / 2)
         {
-            exit_impl_limit_exceeded();
+            translation_limit_exceeded();
         }
 
         srcman->line_capacity *= 2;

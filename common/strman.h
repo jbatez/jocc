@@ -107,7 +107,7 @@ static strid_t strman_get_id(
         uint32_t old_capacity = strman->entry_capacity;
         if (old_capacity > UINT32_MAX / 2)
         {
-            exit_impl_limit_exceeded();
+            translation_limit_exceeded();
         }
 
         strman->entry_capacity = old_capacity * 2;
@@ -162,7 +162,7 @@ static strid_t strman_get_id(
     strman->data_size = strid + len + 1;
     if (strman->data_size <= strid)
     {
-        exit_impl_limit_exceeded();
+        translation_limit_exceeded();
     }
 
     if (strman->data_capacity < strman->data_size)

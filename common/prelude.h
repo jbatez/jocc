@@ -28,19 +28,16 @@ typedef uint32_t astid_t;
 // 0 is reserved for null.
 typedef uint32_t srcloc_t;
 
-// Source location range.
-struct srcloc_range
+// Exit because out of memory.
+static void out_of_memory(void)
 {
-    // Inclusive.
-    srcloc_t start;
+    fprintf(stderr, "fatal error: out of memory\n");
+    exit(EXIT_FAILURE);
+}
 
-    // Exclusive.
-    srcloc_t end;
-};
-
-// Exit because an implementation limit was exceeded.
-static void exit_impl_limit_exceeded(void)
+// Exit because a translation limit was exceeded.
+static void translation_limit_exceeded(void)
 {
-    fprintf(stderr, "fatal error: an implementation limit was exceeded\n");
+    fprintf(stderr, "fatal error: translation limit exceeded\n");
     exit(EXIT_FAILURE);
 }

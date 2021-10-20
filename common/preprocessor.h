@@ -23,7 +23,7 @@ static int preprocess(
     tgroup->reserved_srcloc_count += phys_file->size + 1;
     if (tgroup->reserved_srcloc_count <= old_reserved_srcloc_count)
     {
-        exit_impl_limit_exceeded();
+        translation_limit_exceeded();
     }
 
     // Add logical and presumed file.
@@ -35,8 +35,7 @@ static int preprocess(
 
     // Initialize lexer.
     struct lexer lexer;
-    const char *end = phys_file->data + phys_file->size;
-    lexer_init(&lexer, tgroup, phys_file->data, end, pres_file_id);
+    lexer_init(&lexer, tgroup, phys_file->data, phys_file->size, pres_file_id);
 
     // For each line.
     for (;;)

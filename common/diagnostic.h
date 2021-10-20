@@ -22,7 +22,11 @@ enum diag_code
 // Diagnostic (e.g. error or warning).
 struct diagnostic
 {
-    struct srcloc_range srcloc_range;
+    // Inclusive.
+    srcloc_t start;
+
+    // Exclusive.
+    srcloc_t end;
 
     enum diag_severity severity : 16;
     enum diag_code code : 16;
@@ -30,7 +34,7 @@ struct diagnostic
     // Offset in line_text to point at.
     uint32_t line_text_offset;
 
-    // Up to 80 characters around srcloc_range.start;
+    // Up to 80 characters around start;
     // Owned and optional.
     char *line_text;
 };
@@ -83,7 +87,7 @@ static void diag_arr_add(
     {
         if (arr->capacity > UINT32_MAX / 2)
         {
-            exit_impl_limit_exceeded();
+            translation_limit_exceeded();
         }
 
         arr->capacity *= 2;
@@ -94,8 +98,8 @@ static void diag_arr_add(
     uint32_t idx = arr->len++;
     struct diagnostic *diag = &arr->data[idx];
 
-    diag->srcloc_range.start = start;
-    diag->srcloc_range.end = end;
+    diag->start = start;
+    diag->end = end;
     diag->severity = severity;
     diag->code = code;
     diag->line_text_offset = line_text_offset;

@@ -27,7 +27,7 @@ struct lexer
 {
     struct tgroup *tgroup;
     const char *pos;
-    const char *end;
+    const char *eof;
     pres_file_id_t pres_file_id;
     uint32_t line_num_offset;
 };
@@ -36,18 +36,18 @@ struct lexer
 static void lexer_init(
     struct lexer *lexer,
     struct tgroup *tgroup,
-    const char *pos,
-    const char *end,
+    const char *file_data,
+    uint32_t file_size,
     pres_file_id_t pres_file_id)
 {
     assert(lexer != NULL);
     assert(tgroup != NULL);
-    assert(pos != NULL);
-    assert(end != NULL);
+    assert(file_data != NULL);
+    assert(file_data[file_size] == '\0');
 
     lexer->tgroup = tgroup;
-    lexer->pos = pos;
-    lexer->end = end;
+    lexer->pos = file_data;
+    lexer->eof = file_data + file_size;
     lexer->pres_file_id = pres_file_id;
     lexer->line_num_offset = 0;
 }
@@ -182,8 +182,9 @@ static bool _lexer_include_until_delimiter(struct lexer *lexer, char delimiter)
         }
         else if (*lexer->pos == '\\')
         {
-            // Include the backslash in an escape sequence
-            // and treat the code point after it like any other.
+            // Include the leading backslash in an escape sequence here. This
+            // way, the next character won't be treated special, even if it is
+            // a delimiter or another backslash.
             _lexer_include_byte(lexer);
             _lexer_consume_line_splices(lexer);
         }
@@ -331,7 +332,7 @@ static struct lexeme lexer_next(struct lexer *lexer)
     switch (*lexer->pos)
     {
     case '\0':
-        if (lexer->pos != lexer->end)
+        if (lexer->pos != lexer->eof)
         {
             goto other;
         }

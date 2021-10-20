@@ -55,14 +55,14 @@ static astid_t astman_alloc_node(
     uint32_t tmp_len = old_len + 1 + child_count;
     if (tmp_len <= old_len)
     {
-        exit_impl_limit_exceeded();
+        translation_limit_exceeded();
     }
 
     // Make sure extra_count doesn't cause overflow.
     astman->data_len = tmp_len + extra_count;
     if (astman->data_len < tmp_len)
     {
-        exit_impl_limit_exceeded();
+        translation_limit_exceeded();
     }
 
     // Re-allocate if necessary.
